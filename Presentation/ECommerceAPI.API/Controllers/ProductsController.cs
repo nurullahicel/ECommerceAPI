@@ -1,4 +1,5 @@
 ﻿using ECommerceAPI.Application.Repositories;
+using ECommerceAPI.Application.RequestParameters;
 using ECommerceAPI.Application.ViewModels.Products;
 using ECommerceAPI.Domain.Entities;
 using Microsoft.AspNetCore.Http;
@@ -25,7 +26,7 @@ namespace ECommerceAPI.API.Controllers
 
         }
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery]Pagination pagination)
         {
             #region Dummy Datas
             //await _productWriteRepository.AddRangeAsync(new()
@@ -36,7 +37,17 @@ namespace ECommerceAPI.API.Controllers
             //});
             //await _productWriteRepository.SaveAsync();
             #endregion
-            return Ok(_productReadRepository.GetAll(false));
+
+           var products= _productReadRepository.GetAll(false).Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Stock,
+                p.Price,
+                p.CreatedDate,
+                p.UpdatedDate
+            }).Skip(pagination.Page * pagination.Size).Take(pagination.Size).ToList();
+            return Ok(products);
         }
 
         [HttpGet("{id}")]
@@ -48,6 +59,7 @@ namespace ECommerceAPI.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(VM_Create_Product model)
         {
+          
             await _productWriteRepository.AddAsync(new()
             {
                 Name = model.Name,
