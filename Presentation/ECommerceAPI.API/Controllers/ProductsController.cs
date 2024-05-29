@@ -37,8 +37,8 @@ namespace ECommerceAPI.API.Controllers
             //});
             //await _productWriteRepository.SaveAsync();
             #endregion
-
-           var products= _productReadRepository.GetAll(false).Select(p => new
+            var totalProductCount = _productReadRepository.GetAll(false).Count();
+            var products= _productReadRepository.GetAll(false).Skip(pagination.Page * pagination.Size).Take(pagination.Size).Select(p => new
             {
                 p.Id,
                 p.Name,
@@ -46,8 +46,13 @@ namespace ECommerceAPI.API.Controllers
                 p.Price,
                 p.CreatedDate,
                 p.UpdatedDate
-            }).Skip(pagination.Page * pagination.Size).Take(pagination.Size).ToList();
-            return Ok(products);
+            }).ToList();
+            
+            return Ok(new
+            {
+                Products = products,
+                TotalProductCount = totalProductCount
+            });
         }
 
         [HttpGet("{id}")]
@@ -85,7 +90,7 @@ namespace ECommerceAPI.API.Controllers
         {
             await _productWriteRepository.RemoveAsync(id);
             await _productWriteRepository.SaveAsync();
-            return Ok();
+            return Ok() ;
         }
     }
 }
