@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using ECommerceAPI.Application.Features.Commands.AppUser.CreateUser;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,17 +9,19 @@ namespace ECommerceAPI.API.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        readonly Mediator _mediator;
+        readonly IMediator _mediator;
 
-        public UsersController(Mediator mediator)
+        public UsersController(IMediator mediator)
         {
             _mediator = mediator;
         }
 
-        public Task<IActionResult> Create()
+        [HttpPost]
+        public async Task<IActionResult> CreateUser([FromBody]CreateUserCommandRequest createUserCommandRequest)
         {
-
+           CreateUserCommandResponse response=await _mediator.Send(createUserCommandRequest);
+            return Ok(response);
         }
-       
+
     }
 }
