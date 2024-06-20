@@ -23,7 +23,7 @@ namespace ECommerceAPI.Application.Features.Commands.AppUser.CreateUser
                 Name = request.Name,
                 Surname = request.Surname,
                 UserName = request.Username,
-                Email = request.Email,
+                Email = request.Email
 
             }, request.Password);
             CreateUserCommandResponse response = new() { Succeeded = result.Succeeded };
