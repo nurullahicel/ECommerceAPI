@@ -7,6 +7,7 @@ using ECommerceAPI.Domain.Entities.Identity;
 using Google.Apis.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -22,12 +23,14 @@ namespace ECommerceAPI.Persistence.Services
         readonly IConfiguration _configuration;
         readonly ITokenHandler _tokenHandler;
         readonly SignInManager<Domain.Entities.Identity.AppUser> _signInManager;
-        public AuthService(UserManager<AppUser> userManager, IConfiguration configuration, ITokenHandler tokenHandler, SignInManager<AppUser> signInManager)
+        readonly IUserService _userService;
+        public AuthService(UserManager<AppUser> userManager, IConfiguration configuration, ITokenHandler tokenHandler, SignInManager<AppUser> signInManager, IUserService userService)
         {
             _userManager = userManager;
             _configuration = configuration;
             _tokenHandler = tokenHandler;
             _signInManager = signInManager;
+            _userService = userService;
         }
 
 
@@ -62,18 +65,21 @@ namespace ECommerceAPI.Persistence.Services
                     result = identityResult.Succeeded;
                 }
             }
-           
-            if (result)
-               { await _userManager.AddLoginAsync(user, info); }
-           
-            else
-                 { throw new Exception("Invalid External authentication"); }
-            
-            Token token = _tokenHandler.CreateAccessToken(accessTokenLifeTime);
 
-            return token;
-        }       
-       
+            if (result)
+            {
+                await _userManager.AddLoginAsync(user, info);
+                Token token = _tokenHandler.CreateAccessToken(accessTokenLifeTime);
+                await _userService.UpdateRefreshToken(token.RefreshToken,user,token.Expiration,15);
+                return token;
+            }
+
+
+            throw new Exception("Invalid External authentication");
+
+
+        }
+
 
         public async Task<Token> LoginAsync(string usernameOrEmail, string password, int accessTokenLifeTime)
         {
@@ -89,11 +95,26 @@ namespace ECommerceAPI.Persistence.Services
             if (result.Succeeded)
             {
                 Token token = _tokenHandler.CreateAccessToken(accessTokenLifeTime);
+                await _userService.UpdateRefreshToken(token.RefreshToken, user, token.Expiration, 15);
                 return token;
             }
-           
-           
+
+
             throw new AuthenticationErrorException();
+        }
+
+        public async Task<Token> RefreshTokenLoginAsync(string refreshToken)
+        {
+            AppUser? user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+
+            if (user != null && user?.RefreshTokenEndDate>DateTime.UtcNow)
+            {
+                Token token = _tokenHandler.CreateAccessToken(15);
+               await _userService.UpdateRefreshToken(token.RefreshToken, user, token.Expiration, 15);
+                return token;
+            }
+            else
+                throw new NotFoundUserException();
         }
     }
 }
