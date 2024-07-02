@@ -30,9 +30,13 @@ builder.Services.AddApplicationServices();
 builder.Services.AddPersistanceServices();
 builder.Services.AddInfrastructureServices();
 builder.Services.AddSignalRServices();
+
 //builder.Services.AddStorage(StorageType.Azure);
 //builder.Services.AddStorage<LocalStorage>();
 builder.Services.AddStorage<AzureStorage>();
+
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 policy.WithOrigins("http://localhost:4200", "\"http://localhost:4200\"").AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
@@ -53,10 +57,10 @@ Logger log = new LoggerConfiguration()
     .WriteTo.Seq(builder.Configuration["Seq:ServerURL"])
     .Enrich.FromLogContext()
     .MinimumLevel.Information()
-    .CreateLogger();
-    
+    .CreateLogger();   
    
 builder.Host.UseSerilog(log);
+
 
 builder.Services.AddHttpLogging(logging =>
 {
