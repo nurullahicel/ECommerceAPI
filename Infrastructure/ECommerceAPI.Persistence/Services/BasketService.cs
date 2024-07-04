@@ -33,7 +33,7 @@ namespace ECommerceAPI.Persistence.Services
             _basketItemReadRepository = basketItemReadRepository;
             _basketReadRepository = basketReadRepository;
         }
-        private async Task<Basket> ContextUser()
+        private async Task<Basket?> ContextUser()
         {
             var username = _httpContextAccessor?.HttpContext?.User?.Identity?.Name;
             if (!string.IsNullOrEmpty(username))
@@ -74,13 +74,9 @@ namespace ECommerceAPI.Persistence.Services
             if (basket != null)
             {
                 BasketItem _basketItem = await _basketItemReadRepository.GetSingleAsync(bi => bi.BasketId == basket.Id && bi.ProductId == Guid.Parse(basketItem.ProductId));
-
                 if (_basketItem != null)
-                {
                     _basketItem.Quantity++;
-                }
                 else
-                {
                     await _basketItemWriteRepository.AddAsync(new()
                     {
                         BasketId = basket.Id,
@@ -88,9 +84,9 @@ namespace ECommerceAPI.Persistence.Services
                         Quantity = basketItem.Quantity
                     });
 
-                    await _basketItemWriteRepository.SaveAsync();
-                }
+                await _basketItemWriteRepository.SaveAsync();
             }
+
         }
         public async Task<List<BasketItem>> GetBasketItemsAsync()
         {
@@ -122,5 +118,14 @@ namespace ECommerceAPI.Persistence.Services
                 await _basketItemWriteRepository.SaveAsync();
             }
         }
+        public Basket? GetUserActiveBasket
+        {
+            get
+            {
+                Basket? basket = ContextUser().Result;
+                return basket;
+            }
+        }
+
     }
 }

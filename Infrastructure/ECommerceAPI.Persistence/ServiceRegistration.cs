@@ -54,6 +54,7 @@ namespace ECommerceAPI.Persistence
 
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IBasketService, BasketService>();
+            services.AddScoped<IOrderService,OrderService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IInternalAuthentication, AuthService>();
             services.AddScoped<IExternalAuthentication, AuthService>();
